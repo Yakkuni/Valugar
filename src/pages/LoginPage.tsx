@@ -10,27 +10,28 @@ const PageWrapper = styled.div`
 `;
 
 const LoginContainer = styled.div`
-  max-width: 1200px;
+  max-width: 500px;
   width: 100%;
-  display: grid;
-  grid-template-columns: 45% 55%;
-  gap: 40px;
-  align-items: center;
-`;
-
-const FormColumn = styled.div`
-  padding-left: 40px;
+  margin: 0 auto;
+  position: relative;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 30px;
+  background-color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 `;
 
 const FormTitle = styled.h2`
   color: #0090C1;
   font-size: 26px;
+  text-align: center;
   margin-bottom: 30px;
   font-weight: 600;
 `;
 
 const FormGroup = styled.div`
   margin-bottom: 20px;
+  position: relative;
 `;
 
 const Label = styled.label`
@@ -42,7 +43,7 @@ const Label = styled.label`
 
 const Input = styled.input`
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px;
   border: 1px solid #ddd;
   border-radius: 5px;
   font-size: 14px;
@@ -70,10 +71,10 @@ const PasswordVisibilityButton = styled.button`
 
 const ForgotPassword = styled(Link)`
   display: block;
-  text-align: right;
+  text-align: center;
   font-size: 14px;
   color: #0090C1;
-  margin-top: 5px;
+  margin: 10px 0 20px;
   text-decoration: none;
 `;
 
@@ -87,7 +88,7 @@ const LoginButton = styled.button`
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  margin: 20px 0;
+  margin-bottom: 20px;
   
   &:hover {
     background-color: #007aa9;
@@ -98,6 +99,7 @@ const RegisterPrompt = styled.p`
   text-align: center;
   font-size: 14px;
   color: #666;
+  margin-bottom: 0;
   
   a {
     color: #0090C1;
@@ -106,100 +108,81 @@ const RegisterPrompt = styled.p`
   }
 `;
 
-const ImageColumn = styled.div`
-  background-color: #f5f5f5;
-  border-radius: 10px;
-  overflow: hidden;
-  position: relative;
-  height: 550px;
-`;
-
-const PropertyImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-`;
-
-const MarketingContent = styled.div`
+// Marcadores de guia de design (visíveis apenas no modo de desenvolvimento)
+const DesignGuides = styled.div`
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 30px;
-  background: rgba(245, 245, 245, 0.7);
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
   
-  h2 {
-    font-size: 32px;
-    color: #555;
-    font-weight: 300;
-    margin-bottom: 5px;
+  .blue-guide {
+    position: absolute;
+    border: 1px solid #0099ff;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
   }
   
-  .highlight {
-    color: #444;
-    font-size: 38px;
-    font-weight: 500;
-    margin-bottom: 15px;
-    display: block;
-  }
-  
-  p {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 20px;
+  .pink-guide {
+    position: absolute;
+    border: 1px solid #ff00ff;
+    left: 10px;
+    right: 10px;
+    top: 10px;
+    bottom: 10px;
   }
 `;
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [showGuides, setShowGuides] = useState(false); // Para desenvolvimento
   
   return (
     <PageWrapper>
       <LoginContainer>
-        <FormColumn>
-          <FormTitle>Bem vindo(a) de volta!</FormTitle>
-          
-          <form>
-            <FormGroup>
-              <Label>Email</Label>
-              <Input type="email" placeholder="Digite seu email" />
-            </FormGroup>
-            
-            <FormGroup>
-              <Label>Senha</Label>
-              <PasswordField>
-                <Input 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="Digite sua senha" 
-                />
-                <PasswordVisibilityButton 
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? "👁️" : "👁️‍🗨️"}
-                </PasswordVisibilityButton>
-              </PasswordField>
-              <ForgotPassword to="/esqueci-senha">Esqueceu sua senha?</ForgotPassword>
-            </FormGroup>
-            
-            <LoginButton type="submit">Entrar</LoginButton>
-            
-            <RegisterPrompt>
-              Não possui uma conta? <Link to="/cadastrar">Cadastre-se</Link>
-            </RegisterPrompt>
-          </form>
-        </FormColumn>
+        {/* Guias de design visíveis apenas em desenvolvimento */}
+        {showGuides && (
+          <DesignGuides>
+            <div className="blue-guide"></div>
+            <div className="pink-guide"></div>
+          </DesignGuides>
+        )}
         
-        <ImageColumn>
-          <PropertyImage src="/imagens/imagemCadastro.jpg" alt="Imóvel moderno" />
-        </ImageColumn>
+        <FormTitle>Acessar minha conta</FormTitle>
+        
+        <form>
+          <FormGroup>
+            <Label>Email</Label>
+            <Input type="email" placeholder="Digite seu email" />
+          </FormGroup>
+          
+          <FormGroup>
+            <Label>Senha</Label>
+            <PasswordField>
+              <Input 
+                type={showPassword ? "text" : "password"} 
+                placeholder="Digite sua senha" 
+              />
+              <PasswordVisibilityButton 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "👁️" : "👁️‍🗨️"}
+              </PasswordVisibilityButton>
+            </PasswordField>
+          </FormGroup>
+          
+          <LoginButton type="submit">Entrar</LoginButton>
+          
+          <ForgotPassword to="/esqueci-senha">Esqueci minha senha</ForgotPassword>
+          
+          <RegisterPrompt>
+            Não possui uma conta? <Link to="/cadastrar">Cadastre-se</Link>
+          </RegisterPrompt>
+        </form>
       </LoginContainer>
     </PageWrapper>
   );

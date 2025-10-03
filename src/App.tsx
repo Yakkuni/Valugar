@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import AnunciarImovelPage from './pages/AnunciarImovelPage';
 import SearchPage from './pages/SearchPage';
 import PropertyDetailPage from './pages/PropertyDetailPage';
 import ContactPage from './pages/ContactPage';
@@ -27,6 +28,7 @@ function App() {
             <Route path="/entrar" element={<LoginPage />} />
             <Route path="/cadastrar" element={<RegisterPage />} />
             <Route path="/buscar" element={<SearchPage />} />
+            <Route path="/anunciar" element={<AnunciarImovelPage />} />
             <Route path="/imoveis/:id" element={<PropertyDetailPage />} />
             <Route path="/contato" element={<ContactPage />} />
             <Route path="/sobre" element={<AboutPage />} />
