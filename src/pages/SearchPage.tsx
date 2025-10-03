@@ -11,7 +11,7 @@ const PageContainer = styled.div`
 
 const PageTitle = styled.h1`
   color: #0090C1;
-  font-size: 28px;
+  font-size: 30px;
   margin-bottom: 30px;
 `;
 
