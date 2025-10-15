@@ -1,6 +1,12 @@
+// src/App.tsx
 import { Routes, Route } from 'react-router-dom';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import { useTheme } from './context/ThemeContext';
+
+// Importe a Rota Protegida
+import ProtectedRoute from './routes/ProtectedRoute';
+
+// Importe seus componentes e páginas
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -24,14 +30,22 @@ function App() {
         <Header />
         <main>
           <Routes>
+            {/* Rotas Públicas */}
             <Route path="/" element={<HomePage />} />
             <Route path="/entrar" element={<LoginPage />} />
             <Route path="/cadastrar" element={<RegisterPage />} />
             <Route path="/buscar" element={<SearchPage />} />
-            <Route path="/anunciar" element={<AnunciarImovelPage />} />
             <Route path="/imoveis/:id" element={<PropertyDetailPage />} />
             <Route path="/contato" element={<ContactPage />} />
             <Route path="/sobre" element={<AboutPage />} />
+            
+            {/* Rotas Protegidas */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/anunciar" element={<AnunciarImovelPage />} />
+              {/* Adicione aqui outras rotas que precisam de login, ex: /meu-perfil */}
+            </Route>
+
+            {/* Rota Not Found */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>

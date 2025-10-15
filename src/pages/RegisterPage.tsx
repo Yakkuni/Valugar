@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { register as registerService } from '../services/authServices'; // Importa nosso serviço de cadastro
+
+// --- Styled Components (do seu arquivo original, sem alterações) ---
 
 const PageWrapper = styled.div`
   display: flex;
@@ -10,11 +13,11 @@ const PageWrapper = styled.div`
 `;
 
 const RegisterContainer = styled.div`
-  max-width: 500px; // Diminuído para comportar apenas o formulário
+  max-width: 500px;
   width: 100%;
-  margin: 0 auto; // Centraliza horizontalmente
+  margin: 0 auto;
   position: relative;
-  border: 1px solid #e0e0e0; // Adiciona borda sutil ao redor do formulário
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 30px;
   background-color: #fff;
@@ -104,6 +107,11 @@ const SubmitButton = styled.button`
   &:hover {
     background-color: #007aa9;
   }
+  
+  &:disabled {
+    background-color: #a0d8e9;
+    cursor: not-allowed;
+  }
 `;
 
 const LoginPrompt = styled.p`
@@ -119,66 +127,103 @@ const LoginPrompt = styled.p`
   }
 `;
 
-// Marcadores de guia de design (visíveis apenas no modo de desenvolvimento)
-const DesignGuides = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  
-  .blue-guide {
-    position: absolute;
-    border: 1px solid #0099ff;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-  }
-  
-  .pink-guide {
-    position: absolute;
-    border: 1px solid #ff00ff;
-    left: 10px;
-    right: 10px;
-    top: 10px;
-    bottom: 10px;
-  }
+const ErrorMessage = styled.p`
+  color: #ef4444;
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 15px;
 `;
+
+// --- Componente RegisterPage Atualizado ---
 
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showGuides, setShowGuides] = useState(false); // Para desenvolvimento
+  
+  // Estados para os campos do formulário
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  // Estados para controle de UI
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError('');
+
+    // Validações
+    if (!name || !email || !phone || !password || !confirmPassword) {
+      setError('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('As senhas não coincidem.');
+      return;
+    }
+    if (!agreedToTerms) {
+      setError('Você precisa aceitar os Termos de Uso e a Política de Privacidade.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await registerService(name, email, phone, password);
+      // Sucesso! Redireciona o usuário para a página de login.
+      // Opcional: envia uma mensagem de sucesso para a página de login.
+      navigate('/entrar', { state: { message: 'Cadastro realizado com sucesso! Faça o login.' } });
+    } catch (err: any) {
+      // Exibe a mensagem de erro vinda do backend ou uma genérica
+      setError(err.message || 'Ocorreu um erro ao criar a conta. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   return (
     <PageWrapper>
       <RegisterContainer>
-        {/* Guias de design visíveis apenas em desenvolvimento */}
-        {showGuides && (
-          <DesignGuides>
-            <div className="blue-guide"></div>
-            <div className="pink-guide"></div>
-          </DesignGuides>
-        )}
-        
         <FormTitle>Criar conta</FormTitle>
         
-        <form>
+        <form onSubmit={handleSubmit}>
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+
           <FormGroup>
             <Label>Nome completo</Label>
-            <Input type="text" placeholder="Digite seu nome completo" />
+            <Input 
+              type="text" 
+              placeholder="Digite seu nome completo" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={loading}
+            />
           </FormGroup>
           
           <FormGroup>
             <Label>Email</Label>
-            <Input type="email" placeholder="Digite seu email" />
+            <Input 
+              type="email" 
+              placeholder="Digite seu email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+            />
           </FormGroup>
           
           <FormGroup>
             <Label>Telefone</Label>
-            <Input type="tel" placeholder="(00) 00000-0000" />
+            <Input 
+              type="tel" 
+              placeholder="(00) 00000-0000" 
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              disabled={loading}
+            />
           </FormGroup>
           
           <FormGroup>
@@ -187,6 +232,9 @@ const RegisterPage = () => {
               <Input 
                 type={showPassword ? "text" : "password"} 
                 placeholder="Digite sua senha" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
               />
               <PasswordVisibilityButton 
                 type="button"
@@ -203,6 +251,9 @@ const RegisterPage = () => {
               <Input 
                 type={showConfirmPassword ? "text" : "password"} 
                 placeholder="Confirme sua senha" 
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={loading}
               />
               <PasswordVisibilityButton 
                 type="button"
@@ -214,13 +265,21 @@ const RegisterPage = () => {
           </FormGroup>
           
           <TermsCheckbox>
-            <input type="checkbox" id="terms" />
+            <input 
+              type="checkbox" 
+              id="terms" 
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              disabled={loading}
+            />
             <span>
               Eu aceito os <Link to="/termos">Termos de Uso</Link> e <Link to="/politica">Política de privacidade</Link>
             </span>
           </TermsCheckbox>
           
-          <SubmitButton type="submit">Criar conta</SubmitButton>
+          <SubmitButton type="submit" disabled={loading}>
+            {loading ? 'Criando conta...' : 'Criar conta'}
+          </SubmitButton>
           
           <LoginPrompt>
             Já possui uma conta? <Link to="/entrar">Faça login</Link>

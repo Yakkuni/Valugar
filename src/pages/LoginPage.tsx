@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
+import { useAuth } from '../context/AuthContext'; // Importe o hook de autenticação
+
+// --- Styled Components (do seu arquivo original) ---
 
 const PageWrapper = styled.div`
   display: flex;
@@ -93,6 +96,11 @@ const LoginButton = styled.button`
   &:hover {
     background-color: #007aa9;
   }
+
+  &:disabled {
+    background-color: #a0d8e9;
+    cursor: not-allowed;
+  }
 `;
 
 const RegisterPrompt = styled.p`
@@ -108,55 +116,93 @@ const RegisterPrompt = styled.p`
   }
 `;
 
-// Marcadores de guia de design (visíveis apenas no modo de desenvolvimento)
-const DesignGuides = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  
-  .blue-guide {
-    position: absolute;
-    border: 1px solid #0099ff;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-  }
-  
-  .pink-guide {
-    position: absolute;
-    border: 1px solid #ff00ff;
-    left: 10px;
-    right: 10px;
-    top: 10px;
-    bottom: 10px;
-  }
+// --- Novos Styled Components para Feedback ---
+
+const ErrorMessage = styled.p`
+  color: #ef4444;
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 15px;
 `;
+
+const SuccessMessage = styled.p`
+  color: #10b981;
+  background-color: #f0fdf4;
+  border: 1px solid #a7f3d0;
+  border-radius: 5px;
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 15px;
+`;
+
+// --- Componente LoginPage Atualizado ---
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [showGuides, setShowGuides] = useState(false); // Para desenvolvimento
+  
+  // Estados para controlar os campos, erro e carregamento
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const { login } = useAuth(); // Obtenha a função de login do seu AuthContext
+  const navigate = useNavigate(); // Hook para navegar entre páginas
+  const location = useLocation(); // Hook para acessar o state da navegação
+
+  useEffect(() => {
+    // Verifica se há uma mensagem de sucesso vinda da página de registro
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+      // Limpa o state para não mostrar a mensagem novamente ao navegar
+      window.history.replaceState({}, document.title)
+    }
+  }, [location]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault(); 
+    setError(''); 
+    setSuccessMessage('');
+    setLoading(true);
+
+    if (!email || !password) {
+      setError('Por favor, preencha todos os campos.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await login(email, password);
+      // O login foi bem-sucedido, redireciona para a página inicial
+      navigate('/'); 
+    } catch (err: any) {
+      // Define a mensagem de erro vinda do backend ou uma genérica
+      setError(err.message || 'Falha no login. Verifique suas credenciais.');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   return (
     <PageWrapper>
       <LoginContainer>
-        {/* Guias de design visíveis apenas em desenvolvimento */}
-        {showGuides && (
-          <DesignGuides>
-            <div className="blue-guide"></div>
-            <div className="pink-guide"></div>
-          </DesignGuides>
-        )}
-        
         <FormTitle>Acessar minha conta</FormTitle>
         
-        <form>
+        <form onSubmit={handleSubmit}>
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+          {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
+          
           <FormGroup>
             <Label>Email</Label>
-            <Input type="email" placeholder="Digite seu email" />
+            <Input 
+              type="email" 
+              placeholder="Digite seu email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+            />
           </FormGroup>
           
           <FormGroup>
@@ -165,6 +211,9 @@ const LoginPage = () => {
               <Input 
                 type={showPassword ? "text" : "password"} 
                 placeholder="Digite sua senha" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
               />
               <PasswordVisibilityButton 
                 type="button"
@@ -175,7 +224,9 @@ const LoginPage = () => {
             </PasswordField>
           </FormGroup>
           
-          <LoginButton type="submit">Entrar</LoginButton>
+          <LoginButton type="submit" disabled={loading}>
+            {loading ? 'Entrando...' : 'Entrar'}
+          </LoginButton>
           
           <ForgotPassword to="/esqueci-senha">Esqueci minha senha</ForgotPassword>
           
