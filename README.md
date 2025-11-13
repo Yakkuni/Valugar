@@ -1,53 +1,172 @@
 # Valugar - Imóveis no Vale do Jaguaribe
 
-Este é um projeto de uma plataforma imobiliária para o Vale do Jaguaribe, desenvolvido com React.
+Este é um projeto de uma plataforma imobiliária para o Vale do Jaguaribe, desenvolvido com React e integrado com uma API REST.
 
-## Tecnologias Utilizadas
+## 🚀 Tecnologias Utilizadas
 
+### Frontend
 - React 18
 - TypeScript
 - React Router v6
 - Styled Components
+- Axios
+- JWT Decode
 - Vite (build tool)
 
-## Pré-requisitos
+### Backend
+- API REST (necessária para funcionar)
+- Autenticação JWT
+- Endpoints documentados no Swagger
 
-Certifique-se de ter as seguintes ferramentas instaladas em seu ambiente de desenvolvimento:
+## 📋 Pré-requisitos
 
-- Node.js (v16 ou superior)
-- npm (v8 ou superior) ou yarn
+Certifique-se de ter as seguintes ferramentas instaladas:
 
-## Instalação
+- **Node.js** (v18 ou superior)
+- **npm** (v8 ou superior) ou **yarn**
+- **Backend rodando** na porta 3000
 
-Siga estes passos para configurar o projeto em sua máquina local:
+## 🔧 Instalação
 
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/seu-usuario/valugar.git
-   cd valugar
-   ```
+### 1. Clone o repositório
 
-2. Navegue para a pasta do projeto React:
-   ```bash
-   cd react-valugar
-   ```
+```bash
+git clone https://github.com/Yakkuni/Valugar.git
+cd Valugar
+```
 
-3. Instale as dependências:
-   ```bash
-   npm install
-   # ou
-   yarn install
-   ```
+### 2. Instale as dependências
 
-4. Inicie o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   # ou
-   yarn dev
-   ```
+```bash
+npm install
+# ou
+yarn install
+```
 
-5. Abra seu navegador e acesse:
-   ```
+### 3. Configure as variáveis de ambiente
+
+Crie um arquivo `.env` na raiz do projeto (copie de `.env.example`):
+
+```bash
+cp .env.example .env
+```
+
+Edite o arquivo `.env`:
+
+```env
+# Para desenvolvimento com proxy (recomendado)
+VITE_API_URL=/api
+
+# Para desenvolvimento sem proxy (conectando diretamente ao backend)
+# VITE_API_URL=http://localhost:3000
+
+# Para produção
+# VITE_API_URL=https://sua-api-producao.com
+```
+
+### 4. Inicie o backend
+
+**IMPORTANTE:** O backend deve estar rodando antes de iniciar o frontend.
+
+```bash
+# Vá para a pasta do backend e inicie o servidor
+cd ../backend
+npm run start:dev
+# O backend deve estar rodando em http://localhost:3000
+```
+
+### 5. Inicie o frontend
+
+```bash
+npm run dev
+# ou
+yarn dev
+```
+
+O aplicativo estará disponível em: **http://localhost:5173**
+
+## 📁 Estrutura do Projeto
+
+```
+src/
+├── components/        # Componentes reutilizáveis
+├── context/          # Contextos React (Auth, Theme, etc)
+├── hooks/            # Hooks customizados (useListings, useUsers)
+├── pages/            # Páginas da aplicação
+├── routes/           # Configuração de rotas
+├── services/         # Serviços de API (axios)
+├── styles/           # Estilos globais e tema
+├── types/            # Tipos TypeScript
+└── utils/            # Funções utilitárias
+```
+
+## 🔌 Integração com a API
+
+O frontend está totalmente integrado com a API REST. Consulte os seguintes arquivos para mais detalhes:
+
+- **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** - Guia completo de integração
+- **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** - Solução de problemas comuns
+
+### Endpoints disponíveis:
+
+#### Autenticação
+- `POST /auth/login` - Login do usuário
+- `POST /auth/refresh-token` - Renovar token
+- `POST /auth/user/register` - Registrar usuário
+- `POST /auth/admin/register` - Registrar admin
+- `GET /auth/user` - Listar todos os usuários
+- `GET /auth/user/id/:id` - Buscar usuário por ID
+- `DELETE /auth/user/:id` - Deletar usuário
+
+#### Anúncios
+- `POST /listing/register` - Criar anúncio
+- `GET /listing/:id` - Buscar anúncio por ID
+- `PUT /listing/:id` - Atualizar anúncio
+- `DELETE /listing/:id` - Deletar anúncio
+
+## 🛠️ Scripts Disponíveis
+
+```bash
+# Desenvolvimento
+npm run dev
+
+# Build para produção
+npm run build
+
+# Preview da build de produção
+npm run preview
+
+# Lint
+npm run lint
+```
+
+## 🐛 Problemas Comuns
+
+### ❌ Erro: ERR_NETWORK
+
+**Causa:** O frontend não consegue conectar ao backend.
+
+**Solução:**
+1. Verifique se o backend está rodando na porta 3000
+2. Reinicie o servidor frontend: `npm run dev`
+3. Consulte [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+
+### ❌ Erro: 401 Unauthorized
+
+**Causa:** Token expirado ou inválido.
+
+**Solução:**
+1. Faça login novamente
+2. Limpe o localStorage: `localStorage.clear()`
+
+### ❌ Erro: CORS
+
+**Causa:** Backend não está aceitando requisições do frontend.
+
+**Solução:**
+1. Use o proxy do Vite (já configurado)
+2. Configure CORS no backend
+3. Veja exemplos em [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
    http://localhost:5173
    ```
 

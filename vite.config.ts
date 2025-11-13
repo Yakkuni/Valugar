@@ -15,5 +15,14 @@ export default defineConfig({
       '@context': path.resolve(__dirname, './src/context'),
       '@styles': path.resolve(__dirname, './src/styles')
     }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   }
 })

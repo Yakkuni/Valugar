@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useParams, Link } from 'react-router-dom';
-import { useProperties, Property } from '../context/PropertyContext';
+import { useListings } from '../hooks/useListings';
+import { Listing } from '../types';
 
 const PageContainer = styled.div`
   max-width: 1440px;
@@ -220,8 +221,7 @@ const SubmitButton = styled.button`
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { getPropertyById } = useProperties();
-  const [property, setProperty] = useState<Property | null>(null);
+  const { getById, listing, loading: loadingListing } = useListings();
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [contactForm, setContactForm] = useState({
@@ -232,14 +232,20 @@ const PropertyDetailPage: React.FC = () => {
   });
   
   useEffect(() => {
-    if (id) {
-      const foundProperty = getPropertyById(id);
-      if (foundProperty) {
-        setProperty(foundProperty);
+    const fetchProperty = async () => {
+      if (id) {
+        try {
+          await getById(id);
+        } catch (error) {
+          console.error('Erro ao buscar imóvel:', error);
+        } finally {
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    }
-  }, [id, getPropertyById]);
+    };
+    
+    fetchProperty();
+  }, [id, getById]);
   
   const handleContactChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -272,7 +278,15 @@ const PropertyDetailPage: React.FC = () => {
     );
   }
   
-  if (!property) {
+  if (loading || loadingListing) {
+    return (
+      <PageContainer>
+        <div>Carregando...</div>
+      </PageContainer>
+    );
+  }
+  
+  if (!listing) {
     return (
       <PageContainer>
         <PropertyNotFound>
@@ -284,13 +298,11 @@ const PropertyDetailPage: React.FC = () => {
     );
   }
   
-  // Create property location from address and city
-  const location = `${property.address}, ${property.city}`;
+  // Create property location from address
+  const location = `${listing.address.street}, ${listing.address.neighborhood} - ${listing.address.city}, ${listing.address.state}`;
   
   // If there's no images, create a placeholder
-  const images = property.images.length > 0 
-    ? property.images 
-    : ['/public/imagens/casa1.jpg', '/public/imagens/casa2.jpg', '/public/imagens/casa3.jpg', '/public/imagens/casa4.jpg'];
+  const images = ['/public/imagens/casa1.jpg', '/public/imagens/casa2.jpg', '/public/imagens/casa3.jpg', '/public/imagens/casa4.jpg'];
   
   return (
     <PageContainer>
@@ -304,17 +316,17 @@ const PropertyDetailPage: React.FC = () => {
       <PropertyContainer>
         <PropertyGallery>
           <MainImage>
-            <img src={images[activeImage]} alt={property.title} />
+            <img src={images[activeImage]} alt={listing.title} />
           </MainImage>
           
           <ThumbnailGrid>
-            {images.slice(0, 4).map((image, index) => (
+            {images.slice(0, 4).map((image: string, index: number) => (
               <Thumbnail 
                 key={index} 
                 active={activeImage === index}
                 onClick={() => setActiveImage(index)}
               >
-                <img src={image} alt={`${property.title} - Imagem ${index + 1}`} />
+                <img src={image} alt={`${listing.title} - Imagem ${index + 1}`} />
               </Thumbnail>
             ))}
           </ThumbnailGrid>
@@ -377,12 +389,12 @@ const PropertyDetailPage: React.FC = () => {
       </PropertyContainer>
       
       <div style={{ marginTop: '30px' }}>
-        <PropertyTitle>{property.title}</PropertyTitle>
+        <PropertyTitle>{listing.title}</PropertyTitle>
         <PropertyLocation>{location}</PropertyLocation>
         <PropertyPrice>
-          {property.status === 'for-sale' ? 'R$ ' : 'R$ '} 
-          {property.price.toLocaleString('pt-BR')},00
-          {property.status === 'for-rent' ? '/mês' : ''}
+          {listing.type === 'SALE' ? 'R$ ' : 'R$ '} 
+          {listing.basePrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {listing.type === 'RENT' ? '/mês' : ''}
         </PropertyPrice>
         
         <FeaturesGrid>
@@ -390,28 +402,28 @@ const PropertyDetailPage: React.FC = () => {
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
               <path d="M8 1a2 2 0 0 1 2 2v2H6V3a2 2 0 0 1 2-2zm3 4V3a3 3 0 1 0-6 0v2H3.36a1.5 1.5 0 0 0-1.483 1.277L.85 13.13A2.5 2.5 0 0 0 3.322 16h9.355a2.5 2.5 0 0 0 2.473-2.87l-1.028-6.853A1.5 1.5 0 0 0 12.64 5H11z"/>
             </svg>
-            <span>{property.area} m²</span>
+            <span>{listing.details.area} m²</span>
           </Feature>
           
-          {property.bedrooms && (
+          {listing.details.bedrooms > 0 && (
             <Feature>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M3 6a1 1 0 0 0 0 2h10a1 1 0 1 0 0-2H3z"/>
                 <path d="M6.25 3.5a.75.75 0 0 0-.75.75v2a.75.75 0 0 0 1.5 0v-2a.75.75 0 0 0-.75-.75zm3.5 0a.75.75 0 0 0-.75.75v2a.75.75 0 0 0 1.5 0v-2a.75.75 0 0 0-.75-.75z"/>
                 <path d="M2.25 7.125a1.125 1.125 0 0 0-1.125 1.125v3.5A2.25 2.25 0 0 0 3.375 14h9.25a2.25 2.25 0 0 0 2.25-2.25v-3.5a1.125 1.125 0 0 0-1.125-1.125h-1V7a.5.5 0 0 0-.5-.5H3.75a.5.5 0 0 0-.5.5v.125h-1z"/>
               </svg>
-              <span>{property.bedrooms} {property.bedrooms === 1 ? 'Quarto' : 'Quartos'}</span>
+              <span>{listing.details.bedrooms} {listing.details.bedrooms === 1 ? 'Quarto' : 'Quartos'}</span>
             </Feature>
           )}
           
-          {property.bathrooms && (
+          {listing.details.bathrooms > 0 && (
             <Feature>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M14 3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h12zM2 2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2z"/>
                 <path d="M2 5h12v2H2z"/>
                 <path d="M3 14H2v-1h1v1zm4 0H6v-1h1v1zm4 0h-1v-1h1v1zm4 0h-1v-1h1v1z"/>
               </svg>
-              <span>{property.bathrooms} {property.bathrooms === 1 ? 'Banheiro' : 'Banheiros'}</span>
+              <span>{listing.details.bathrooms} {listing.details.bathrooms === 1 ? 'Banheiro' : 'Banheiros'}</span>
             </Feature>
           )}
           
@@ -419,13 +431,13 @@ const PropertyDetailPage: React.FC = () => {
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
               <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
             </svg>
-            <span>{property.type === 'residential' ? 'Residencial' : 'Comercial'}</span>
+            <span>{listing.category}</span>
           </Feature>
         </FeaturesGrid>
         
         <PropertyDescription>
           <h2>Descrição</h2>
-          <p>{property.description}</p>
+          <p>{listing.description}</p>
         </PropertyDescription>
       </div>
     </PageContainer>

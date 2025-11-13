@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const loadUserFromToken = async () => {
       const token = localStorage.getItem('accessToken');
+      
       if (token) {
         try {
           const decodedToken: { id: string } = jwtDecode(token);
@@ -51,10 +52,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           
           setUser(response.data);
           setAccessToken(token);
-        } catch (error) {
-          console.error("Falha ao carregar usuário a partir do token:", error);
+        } catch (error: any) {
+          // Se for erro de rede, mostra mensagem mais clara
+          if (error.code === 'ERR_NETWORK') {
+            console.warn('⚠️ Não foi possível conectar ao servidor. Verifique se o backend está rodando em http://localhost:3000');
+          } else {
+            console.error("Falha ao carregar usuário a partir do token:", error.message);
+          }
           // Limpa o estado se o token for inválido ou a chamada falhar
           localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
           delete api.defaults.headers.common['Authorization'];
         }
       }
@@ -65,10 +72,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadUserFromToken();
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email: string, password: string) => {
     const data = await loginService(email, password);
     if (data.accessToken) {
       localStorage.setItem('accessToken', data.accessToken);
+      if (data.refreshToken) {
+        localStorage.setItem('refreshToken', data.refreshToken);
+      }
+      
       const decodedToken: { id: string } = jwtDecode(data.accessToken);
       api.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
       
@@ -84,6 +95,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setAccessToken(null);
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     delete api.defaults.headers.common['Authorization'];
   };
 

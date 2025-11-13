@@ -1,45 +1,103 @@
 // src/services/listingService.ts
 import api from './api';
 
-// Define a interface para os dados do anúncio, baseada no DTO do backend
-// Isso ajuda com o autocompletar e a segurança de tipos
-export interface CreateListingPayload {
-  title: string;
-  description?: string;
-  type: "CASA" | "APARTAMENTO" | "KITNET" | "QUARTO" | "SITIO" | "OUTRO";
-  category: "RESIDENTIAL" | "COMMERCIAL" | "MIXED_USE";
-  basePrice: number;
-  iptu?: number;
-  userId: string;
-  address: {
-    zipCode: string;
-    state: string;
-    city: string;
-    neighborhood: string;
-    street: string;
-    reference?: string | null;
-  };
-  details: {
-    area: number;
-    bedrooms: number;
-    bathrooms: number;
-    doesntPayWaterBill: boolean;
-    hasGarage: boolean;
-    isPetFriendly: boolean;
-    hasCeramicFlooring: boolean;
-    hasCeilingLining: boolean;
-    hasBackyard: boolean;
-    hasPool: boolean;
-    hasSolarPanel: boolean;
-  };
+// ==================== INTERFACES ====================
+
+export interface Address {
+  zipCode: string;
+  state: string;
+  city: string;
+  neighborhood: string;
+  street: string;
+  reference?: string;
 }
 
-export const createListing = async (payload: CreateListingPayload) => {
+export interface ListingDetails {
+  area: string;
+  bedrooms: number;
+  bathrooms: number;
+}
+
+export interface CreateListingRequest {
+  title: string;
+  description: string;
+  type: 'SALE' | 'RENT';
+  category: 'RESIDENCIAL' | 'COMERCIAL' | 'MISTO';
+  basePrice: number;
+  iptu: number;
+  userId: string;
+  address: Address;
+  details: ListingDetails;
+}
+
+export interface CreateListingResponse {
+  id: string;
+}
+
+export interface Listing {
+  id: string;
+  title: string;
+  description: string;
+  type: 'SALE' | 'RENT';
+  category: 'RESIDENCIAL' | 'COMERCIAL' | 'MISTO';
+  basePrice: number;
+  iptu: number;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  address: Address;
+  details: ListingDetails;
+}
+
+// ==================== LISTING ENDPOINTS ====================
+
+/**
+ * POST /listing/register
+ * Cria um novo anúncio
+ */
+export const createListing = async (data: CreateListingRequest): Promise<CreateListingResponse> => {
   try {
-    const response = await api.post('/listing/register', payload);
-    return response.data; // Deve retornar { id: "string" }
+    const response = await api.post<CreateListingResponse>('/listing/register', data);
+    return response.data;
   } catch (error: any) {
-    // Lança o erro para ser tratado no componente
-    throw error.response?.data || new Error('Ocorreu um erro desconhecido');
+    throw error.response?.data || { message: 'Erro ao criar anúncio' };
+  }
+};
+
+/**
+ * DELETE /listing/{id}
+ * Deleta um anúncio pelo ID (somente admins ou dono do post)
+ */
+export const deleteListing = async (id: string): Promise<void> => {
+  try {
+    await api.delete(`/listing/${id}`);
+  } catch (error: any) {
+    throw error.response?.data || { message: 'Erro ao deletar anúncio' };
+  }
+};
+
+/**
+ * GET /listing/{id}
+ * Busca um anúncio pelo ID
+ */
+export const getListingById = async (id: string): Promise<Listing> => {
+  try {
+    const response = await api.get<Listing>(`/listing/${id}`);
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || { message: 'Erro ao buscar anúncio' };
+  }
+};
+
+/**
+ * PUT /listing/{id}
+ * Edita um anúncio já existente (NÃO FINALIZADO)
+ */
+export const updateListing = async (id: string, data: any): Promise<any> => {
+  try {
+    const response = await api.put(`/listing/${id}`, data);
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || { message: 'Erro ao atualizar anúncio' };
   }
 };

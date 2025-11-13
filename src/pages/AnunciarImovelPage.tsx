@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { useAuth } from '../context/AuthContext';
+import { useListings } from '../hooks/useListings';
+import { CreateListingRequest } from '../types';
 
 // Tipos de dados para o formulário
 type PropertyType = 'residencial' | 'comercial' | null;
@@ -658,6 +661,10 @@ const CurrencyInput = styled.input`
 `;
 
 const AnunciarImovelPage = () => {
+  // Context
+  const { user } = useAuth();
+  const { create, loading } = useListings();
+  
   // Estados para controlar as etapas e dados do formulário
   const [currentStep, setCurrentStep] = useState<FormStep>('tipo');
   const [propertyType, setPropertyType] = useState<PropertyType>('residencial');
@@ -672,6 +679,9 @@ const AnunciarImovelPage = () => {
   const [area, setArea] = useState<string>('');
   const [rent, setRent] = useState<string>('');
   const [additionalCosts, setAdditionalCosts] = useState<boolean>(false);
+  const [iptu, setIptu] = useState<string>('');
+  const [listingType, setListingType] = useState<'SALE' | 'RENT'>('RENT');
+  const [zipCode, setZipCode] = useState<string>('');
   
   // Estados para amenidades
   const [hasGarage, setHasGarage] = useState<boolean>(false);
@@ -700,6 +710,58 @@ const AnunciarImovelPage = () => {
   // Navegação entre rotas
   const navigate = useNavigate();
   
+  // Função para submeter o anúncio
+  const submitListing = async () => {
+    if (!user) {
+      alert('Você precisa estar logado para anunciar um imóvel');
+      navigate('/login');
+      return;
+    }
+
+    // Validações básicas
+    if (!title || !description || !rent || !area) {
+      alert('Por favor, preencha todos os campos obrigatórios');
+      return;
+    }
+
+    if (!street || !city || !state || !neighborhood || !zipCode) {
+      alert('Por favor, preencha todos os campos de localização');
+      return;
+    }
+
+    try {
+      const listingData: CreateListingRequest = {
+        title,
+        description,
+        type: listingType,
+        category: propertyType === 'residencial' ? 'RESIDENCIAL' : propertyType === 'comercial' ? 'COMERCIAL' : 'RESIDENCIAL',
+        basePrice: parseFloat(rent.replace(/[^\d,]/g, '').replace(',', '.')),
+        iptu: additionalCosts && iptu ? parseFloat(iptu.replace(/[^\d,]/g, '').replace(',', '.')) : 0,
+        userId: user.id,
+        address: {
+          zipCode,
+          state,
+          city,
+          neighborhood,
+          street: `${street}${number ? ', ' + number : ''}`,
+          reference: complement || undefined,
+        },
+        details: {
+          area,
+          bedrooms,
+          bathrooms,
+        },
+      };
+
+      const response = await create(listingData);
+      alert('Anúncio criado com sucesso!');
+      navigate(`/property/${response.id}`);
+    } catch (error: any) {
+      console.error('Erro ao criar anúncio:', error);
+      alert(error.message || 'Erro ao criar anúncio. Tente novamente.');
+    }
+  };
+  
   // Função para avançar para a próxima etapa
   const nextStep = () => {
     switch (currentStep) {
@@ -716,9 +778,7 @@ const AnunciarImovelPage = () => {
         setCurrentStep('contato');
         break;
       case 'contato':
-        // Aqui você enviaria os dados para o backend
-        alert('Anúncio finalizado com sucesso!');
-        navigate('/');
+        submitListing();
         break;
     }
   };
